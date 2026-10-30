@@ -11,6 +11,7 @@ const authRoutes = require("./routes/authRoutes");
 const meetingRoutes = require("./routes/meetingRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const registerMeetingSocket = require("./socket/meetingSocket");
+const summaryRoutes = require("./routes/summaryRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -50,16 +51,17 @@ const io = new Server(server, {
 app.use("/api/auth", authRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/summary", summaryRoutes);
 
 // Meeting Socket.IO events
 registerMeetingSocket(io);
 
 // Health check
-app.get("/", (req, res) => {
+app.get("/", ( res) => {
   res.send("Welcome to IntellMeet Backend!");
 });
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_, res) => {
   res.status(200).json({
     success: true,
     message: "IntellMeet Backend is running successfully!",

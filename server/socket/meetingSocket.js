@@ -112,6 +112,13 @@ module.exports = function registerMeetingSocket(io) {
 
       socket.join(room);
 
+      console.log("Meeting room:", room);
+      console.log("Total participants:", participants.size);
+      console.log(
+      "Participants:",
+      Array.from(participants.keys())
+    );
+
       socket.emit("existing-participants", {
         participants: existingParticipants,
       });
@@ -124,8 +131,16 @@ module.exports = function registerMeetingSocket(io) {
       console.log(`${safeUser.name} joined meeting ${meetingId}`);
     });
 
+
+
     socket.on("webrtc-offer", (data = {}) => {
       const { meetingId, targetSocketId, offer, user } = data;
+      
+        console.log("Received WebRTC offer:", {
+        from: socket.id,
+        to: targetSocketId,
+        meetingId,
+      });
 
       if (
         socket.data.meetingId !== meetingId ||

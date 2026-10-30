@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import MeetingRoom from "./assets/pages/MeetingRoom.jsx";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function SharedMeeting() {
   const { meetingId: inviteToken } = useParams();

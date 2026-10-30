@@ -77,6 +77,7 @@ router.get("/invite/:token", async (req, res) => {
       return res.status(403).json({
         success: false,
         message: "This meeting has expired. You can no longer join.",
+        status: "expired",
       });
     }
 
@@ -124,10 +125,15 @@ router.post("/:id/invite", async (req, res) => {
       });
     }
 
-    const meeting = await Meeting.findOne({
-      _id: req.params.id,
-      createdBy: req.user._id,
-    });
+     
+const meeting = await Meeting.findOne({
+  _id: req.params.id,
+  createdBy: req.user._id,
+});
+
+console.log("Meeting found:", !!meeting);
+console.log("Existing invite token:", meeting?.inviteToken);
+
 
     if (!meeting) {
       return res.status(404).json({
@@ -174,7 +180,7 @@ router.post("/:id/invite", async (req, res) => {
     return res.status(200).json({
       success: true,
       inviteToken: meeting.inviteToken,
-      inviteLink: `${req.protocol}://${req.get("host")}/meeting/${meeting.inviteToken}`,
+      inviteLink: `${process.env.CLIENT_URL || "http://localhost:5173"}/meeting/${meeting.inviteToken}`,
     });
   } catch (error) {
     console.error("Create invite error:", error.message);

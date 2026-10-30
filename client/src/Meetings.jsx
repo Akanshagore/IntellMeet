@@ -49,6 +49,9 @@ function Meetings() {
 
       const data = await response.json();
 
+      //console.log("INVITE API RESPONSE:", data);
+      //console.log("MEETING ID:", meeting._id);
+
       if (!response.ok) {
         throw new Error(
           data.message || "Failed to load meetings."
@@ -58,6 +61,11 @@ function Meetings() {
       const list = Array.isArray(data)
         ? data
         : data.meetings;
+
+        console.log("MEETINGS LIST:", list);
+        console.log("MEETINGS COUNT:", list?.length);
+
+        setMeetings(list);
 
       if (!Array.isArray(list)) {
         throw new Error("Unexpected API response.");
@@ -145,7 +153,7 @@ const handleShareMeeting = async (meeting) => {
     }
 
     const inviteLink =
-      `${window.location.origin}/meeting/${encodeURIComponent(inviteToken)}`;
+      `${window.location.origin}/meeting/${inviteToken}`;
 
     let copied = false;
 

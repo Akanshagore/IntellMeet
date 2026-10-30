@@ -121,13 +121,31 @@ function CreateMeeting({ onClose, onCreated }) {
       });
 
       const data = await response.json();
+     if (!response.ok || !data.success || !data.meeting) {
+    throw new Error(
+    data.message || "Could not create meeting."
+  );
+}
 
-      if (!response.ok || !data.success || !data.meeting) {
-        throw new Error(
-          data.message || "Could not create meeting."
-        );
-      }
+       const inviteResponse = await fetch(
+      `${API_URL}/${data.meeting._id}/invite`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
 
+const inviteData = await inviteResponse.json();
+
+if (!inviteResponse.ok || !inviteData.success) {
+  throw new Error(
+    inviteData.message || "Could not generate invitation link."
+  );
+}
+
+console.log("Invitation Link:", inviteData.inviteLink); 
       if (typeof onCreated === "function") {
         onCreated(data.meeting);
       }

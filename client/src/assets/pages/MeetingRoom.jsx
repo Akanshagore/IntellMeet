@@ -68,11 +68,19 @@ export default function MeetingRoom({
   const [cameraOn, setCameraOn] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [recordingUrl, setRecordingUrl] = useState("");
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [aiSummary, setAiSummary] = useState("");
+  const [transcript, setTranscript] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
 
   const localVideoRef = useRef(null);
   const socketRef = useRef(null);
   const streamRef = useRef(null);
   const screenStreamRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const recordingChunksRef = useRef([]);
+  const recordingUrlRef = useRef("");
 
   // Each participant has a separate WebRTC connection.
   const peersRef = useRef(new Map());
@@ -386,9 +394,12 @@ export default function MeetingRoom({
       setMicOn(true);
       setCameraOn(true);
 
-      const socket = io(SOCKET_URL, {
-        transports: ["websocket", "polling"],
-      });
+     const socket = io(SOCKET_URL, {
+     transports: ["websocket", "polling"],
+     timeout: 10000,
+     reconnection: true,
+     reconnectionAttempts: 3,
+});
 
       socketRef.current = socket;
 
@@ -405,46 +416,51 @@ export default function MeetingRoom({
       });
 
       socket.on(
-        "existing-participants",
-        ({ participants: existing = [] } = {}) => {
-          existing.forEach((person) => {
-            const socketId = person.socketId;
+  "existing-participants",
+  ({ participants: existing = [] } = {}) => {
+    existing.forEach((person) => {
+      const remoteSocketId = person.socketId;
 
-            if (socketId && socketId !== socket.id) {
-              createOffer(
-                socketId,
-                person.user || person
-              );
-            }
-          });
+      // Only one side initiates each connection.
+      if (remoteSocketId && socket.id > remoteSocketId) {
+        createOffer(remoteSocketId, person.user || person);
+      }
+    });
 
-          setCallStatus(
-            existing.length
-              ? "Connecting to participants..."
-              : "Waiting for participants..."
-          );
-        }
-      );
+    setCallStatus(
+      existing.length
+        ? "Connecting to participants..."
+        : "Waiting for participants..."
+    );
+  }
+);
 
       socket.on(
-        "participant-joined",
-        ({ socketId, user: remoteUser } = {}) => {
-          if (!socketId || socketId === socket.id) return;
+  "participant-joined",
+  ({ socketId, user: remoteUser } = {}) => {
+    if (!socketId || socketId === socket.id) return;
 
-          updateParticipant(socketId, {
-            name: remoteUser?.name || "Participant",
-            stream: null,
-          });
-        }
-      );
+    updateParticipant(socketId, {
+      name: remoteUser?.name || "Participant",
+      stream: null,
+    });
 
-      socket.on("participant-left", ({ socketId } = {}) => {
-        if (socketId) removeParticipant(socketId);
-      });
+    // The same rule prevents both sides from creating offers.
+    if (socket.id > socketId) {
+      createOffer(socketId, remoteUser || {});
+    }
+  }
+);
 
       socket.on("webrtc-offer", handleOffer);
       socket.on("webrtc-answer", handleAnswer);
       socket.on("webrtc-ice-candidate", handleIceCandidate);
+
+      socket.on("participant-left", ({ socketId } = {}) => {
+  if (socketId) {
+    removeParticipant(socketId);
+  }
+});
 
       socket.on("meeting-error", (message) => {
         setError(
@@ -454,11 +470,28 @@ export default function MeetingRoom({
         );
       });
 
-      socket.on("connect_error", (err) => {
-        console.error("Socket connection error:", err);
-        setError("Cannot connect to the meeting server.");
-        setCallStatus("Server connection failed");
-      });
+     socket.on("connect_error", (err) => {
+     console.error("Socket connection error:", err);
+
+     setError(
+      "Cannot connect to the meeting server. Check your server URL and connection."
+    );
+     setCallStatus("Server connection failed");
+
+     streamRef.current?.getTracks().forEach((track) => {
+      track.stop();
+  });
+
+  streamRef.current = null;
+  setLocalStream(null);
+
+  if (socketRef.current === socket) {
+    socket.disconnect();
+    socketRef.current = null;
+  }
+
+  joiningRef.current = false;
+});
 
       socket.on("disconnect", () => {
         if (!leavingRef.current) {
@@ -653,6 +686,190 @@ export default function MeetingRoom({
     setCameraOn(track.enabled);
   };
 
+  const startRecording = () => {
+  const stream = streamRef.current;
+
+  if (!stream || !socketRef.current) {
+    setError("Join the meeting before recording.");
+    return;
+  }
+
+  if (!window.MediaRecorder) {
+    setError("Recording is not supported by this browser.");
+    return;
+  }
+
+  if (!stream.getAudioTracks().length) {
+    setError("Microphone audio is not available.");
+    return;
+  }
+
+  try {
+    const mimeType = [
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+    ].find((type) => MediaRecorder.isTypeSupported(type));
+
+    const recorder = new MediaRecorder(
+      stream,
+      mimeType ? { mimeType } : undefined
+    );
+
+    recordingChunksRef.current = [];
+
+    recorder.ondataavailable = (event) => {
+      if (event.data && event.data.size > 0) {
+        recordingChunksRef.current.push(event.data);
+      }
+    };
+
+    recorder.onerror = (event) => {
+      console.error("Recording error:", event.error);
+      setError("Recording failed.");
+      setIsRecording(false);
+    };
+
+    recorder.onstop = () => {
+      const blob = new Blob(recordingChunksRef.current, {
+        type: recorder.mimeType || "video/webm",
+      });
+
+      recordingChunksRef.current = [];
+
+      if (!blob.size) {
+        setError("Recording is empty.");
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+
+      if (recordingUrlRef.current) {
+        URL.revokeObjectURL(recordingUrlRef.current);
+      }
+
+      recordingUrlRef.current = url;
+      setRecordingUrl(url);
+      setCallStatus("Recording saved. Ready for AI summary.");
+    };
+
+    mediaRecorderRef.current = recorder;
+    recorder.start(1000);
+
+    setIsRecording(true);
+    setError("");
+    setCallStatus("Recording meeting...");
+  } catch (err) {
+    console.error("Start recording error:", err);
+    setError("Could not start recording.");
+  }
+};
+
+const stopRecording = () => {
+  const recorder = mediaRecorderRef.current;
+
+  if (!recorder || recorder.state === "inactive") {
+    setIsRecording(false);
+    return;
+  }
+
+  recorder.stop();
+  setIsRecording(false);
+};
+  
+const generateRecordingSummary = async () => {
+  if (!recordingUrl) {
+    setError("Stop a recording before generating its summary.");
+    return;
+  }
+
+  const token = sessionStorage.getItem("intellmeet_token");
+
+  if (!token) {
+    setError("Please log in again.");
+    return;
+  }
+
+  let blob;
+
+  try {
+    setIsGeneratingSummary(true);
+    setError("");
+    setAiSummary("");
+    setTranscript("");
+    setCallStatus("Transcribing recording...");
+
+    const recordingResponse = await fetch(recordingUrl);
+
+    if (!recordingResponse.ok) {
+      throw new Error("Could not read the recording.");
+    }
+
+    blob = await recordingResponse.blob();
+
+    const formData = new FormData();
+
+    formData.append(
+      "recording",
+      blob,
+      "intellmeet-recording.webm"
+    );
+
+    const transcriptionResponse = await fetch(
+      `${SOCKET_URL}/api/summary/transcribe`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      }
+    );
+
+    const transcriptionData = await transcriptionResponse.json();
+
+    if (!transcriptionResponse.ok || !transcriptionData.success) {
+      throw new Error(
+        transcriptionData.message || "Transcription failed."
+      );
+    }
+
+    const meetingTranscript = transcriptionData.transcript;
+
+    setTranscript(meetingTranscript);
+    setCallStatus("Generating AI summary...");
+
+    const summaryResponse = await fetch(
+      `${SOCKET_URL}/api/summary`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          transcript: meetingTranscript,
+        }),
+      }
+    );
+
+    const summaryData = await summaryResponse.json();
+
+    if (!summaryResponse.ok || !summaryData.success) {
+      throw new Error(
+        summaryData.message || "AI summary generation failed."
+      );
+    }
+
+    setAiSummary(summaryData.summary);
+    setCallStatus("AI summary generated successfully.");
+  } catch (err) {
+    console.error("AI summary error:", err);
+    setError(err.message || "Could not generate AI summary.");
+  } finally {
+    setIsGeneratingSummary(false);
+  }
+};
+
   return (
     <div className="meeting-page">
       <header className="meeting-header">
@@ -707,6 +924,8 @@ export default function MeetingRoom({
                   setError("");
                 }}
               >
+               
+
                 <option value="">Select meeting</option>
                 {meetings.map((meeting) => (
                   <option key={meeting._id} value={meeting._id}>
@@ -801,6 +1020,15 @@ export default function MeetingRoom({
 
                   <button
                     type="button"
+                    className={`control-button ${isRecording ? "control-off" : ""}`}
+                    onClick={isRecording ? stopRecording : startRecording}
+                    >
+                   <span>{isRecording ? "⏹️" : "🔴"}</span>
+                    <small>{isRecording ? "Stop Recording" : "Record"}</small>
+                     </button>
+
+                  <button
+                    type="button"
                     className="control-button"
                     onClick={isSharing ? stopScreenShare : startScreenShare}
                   >
@@ -821,6 +1049,45 @@ export default function MeetingRoom({
             </div>
           </div>
         </main>
+
+        {recordingUrl && (
+  <section className="recording-summary-panel">
+    <h2>Meeting Recording & AI Summary</h2>
+
+    <a
+      href={recordingUrl}
+      download="intellmeet-recording.webm"
+    >
+      Download Recording
+    </a>
+
+    <div>
+      <button
+        type="button"
+        onClick={generateRecordingSummary}
+        disabled={isGeneratingSummary || isRecording}
+      >
+        {isGeneratingSummary
+          ? "Generating Summary..."
+          : "Generate AI Summary"}
+      </button>
+    </div>
+
+    {transcript && (
+      <details>
+        <summary>View Meeting Transcript</summary>
+        <p style={{ whiteSpace: "pre-wrap" }}>{transcript}</p>
+      </details>
+    )}
+
+    {aiSummary && (
+      <div className="ai-summary-content">
+        <h3>AI Meeting Summary</h3>
+        <div style={{ whiteSpace: "pre-wrap" }}>{aiSummary}</div>
+      </div>
+    )}
+  </section>
+)}
 
         {isChatOpen && (
           <aside className="meeting-chat-panel">

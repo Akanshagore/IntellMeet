@@ -7,6 +7,7 @@ import CreateMeeting from "./CreateMeeting";
 import EditMeeting from "./EditMeeting";
 import Calendar from "./Calendar";
 import MeetingRoom from "./assets/pages/MeetingRoom.jsx";
+import Summary from "./assets/pages/Summary.jsx";
 import Dashboard from "./Dashboard.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SharedMeeting from "./SharedMeeting";
@@ -213,15 +214,15 @@ function AppDashboard() {
         <p className="menu-label tools-label">TOOLS</p>
 
         <nav className="nav-menu">
-          <button
-            type="button"
-            className="nav-item"
-            onClick={() =>
-              window.alert("AI summaries will be added next.")
-            }
-          >
-            ✧ AI Summaries
-          </button>
+         <button
+  type="button"
+  className={`nav-item ${
+    activePage === "summary" ? "active" : ""
+  }`}
+  onClick={() => setActivePage("summary")}
+>
+  ✧ AI Summaries
+</button>
 
           <button
             type="button"
@@ -284,6 +285,8 @@ function AppDashboard() {
               ? "Calendar"
               : activePage === "meetings"
               ? "My Meetings"
+              : activePage === "summary"
+              ? "AI Summaries"
               : "Dashboard"}
           </div>
 
@@ -354,6 +357,13 @@ function AppDashboard() {
     />
   </main>
 )}
+     {/* AI Summary */}
+        {activePage === "summary" && (
+          <main className="main-content">
+            <Summary />
+          </main>
+        )}
+
       </div>
 
       {/* Create Meeting Modal */}
@@ -423,6 +433,7 @@ function AppDashboard() {
           path="*"
           element={<AppDashboard />}
         />
+        <Route path="/summary" element={<Summary />} />
       </Routes>
     </BrowserRouter>
   );

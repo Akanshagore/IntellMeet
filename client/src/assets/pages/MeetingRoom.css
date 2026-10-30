@@ -649,3 +649,50 @@
     min-height: 240px;
   }
 }
+.recording-summary-panel {
+  margin: 20px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+}
+
+.recording-summary-panel h2,
+.recording-summary-panel h3 {
+  margin-bottom: 12px;
+}
+
+.recording-summary-panel button {
+  margin-top: 14px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.recording-summary-panel button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.recording-summary-panel a {
+  display: inline-block;
+  margin: 8px 0;
+  color: #2563eb;
+}
+
+.ai-summary-content {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.recording-summary-panel details {
+  margin-top: 16px;
+}
