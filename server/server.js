@@ -12,6 +12,9 @@ const meetingRoutes = require("./routes/meetingRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const registerMeetingSocket = require("./socket/meetingSocket");
 const summaryRoutes = require("./routes/summaryRoutes");
+const recordingRoutes = require("./routes/recordingRoutes");
+
+
 
 const app = express();
 const server = http.createServer(app);
@@ -40,6 +43,11 @@ app.use(
 
 app.use(express.json());
 
+app.use(
+  "/uploads",
+  express.static(require("path").join(__dirname, "uploads"))
+);
+
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -52,6 +60,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/summary", summaryRoutes);
+app.use("/api/recordings", recordingRoutes);
 
 // Meeting Socket.IO events
 registerMeetingSocket(io);

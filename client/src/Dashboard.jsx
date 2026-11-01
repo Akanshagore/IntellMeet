@@ -11,6 +11,7 @@ export default function Dashboard({
   onDeleteMeeting,
   onOpenCalendar,
   onJoinMeeting,
+  onOpenSummary,
 }) {
   const displayName =
     user?.name || user?.fullName || user?.username || "User";
@@ -21,7 +22,7 @@ export default function Dashboard({
         <div>
           <p className="eyebrow">YOUR WORKSPACE</p>
           <h1>
-            Good morning, {displayName} <span>✦</span>
+            Hello, {displayName} <span>✦</span>
           </h1>
           <p className="welcome-text">
             Here is what is happening with your meetings today.
@@ -95,7 +96,7 @@ export default function Dashboard({
         <div className="panel meetings-panel" id="meetings">
           <div className="panel-heading">
             <div>
-              <h2>Upcoming meetings</h2>
+              <h3>meetings</h3>
               <p>Your scheduled team meetings.</p>
             </div>
 
@@ -238,9 +239,7 @@ export default function Dashboard({
 
               <button
                 className="quick-action"
-                onClick={() =>
-                  window.alert("AI summaries will be added next.")
-                }
+                onClick={onOpenSummary}
               >
                 <span className="quick-icon mint">✧</span>
                 <span className="quick-text">
@@ -264,7 +263,15 @@ export default function Dashboard({
             <div className="ai-highlight">
               <span className="meeting-tag">AI FEATURES</span>
               <h3>Meeting summaries</h3>
-              <p>AI summaries are not connected yet.</p>
+              <p>Generate summaries, key points and action items.</p>
+
+            <button
+            type="button"
+            className="primary-button"
+            onClick={onOpenSummary}
+            >
+            Generate AI Summary →
+              </button>
             </div>
           </div>
         </div>

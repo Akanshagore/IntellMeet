@@ -11,6 +11,11 @@ import Summary from "./assets/pages/Summary.jsx";
 import Dashboard from "./Dashboard.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SharedMeeting from "./SharedMeeting";
+import Recordings from "./Recordings";
+import Settings from "./Settings";
+import SidebarBottom from "./SidebarBottom";
+import Notification from "./Notification";
+
 
 const API_URL = "http://localhost:5000/api";
 
@@ -38,6 +43,7 @@ function AppDashboard() {
   const [showCreateMeeting, setShowCreateMeeting] = useState(false);
   const [editingMeeting, setEditingMeeting] = useState(null);
   const [selectedMeetingId, setSelectedMeetingId] = useState("");
+  const [showProfile, setShowProfile] = useState(false);
 
   const [activePage, setActivePage] = useState("dashboard");
 
@@ -224,54 +230,33 @@ function AppDashboard() {
   ✧ AI Summaries
 </button>
 
-          <button
-            type="button"
-            className="nav-item"
-            onClick={() =>
-              window.alert("Recordings will be added next.")
-            }
-          >
-            ▷ Recordings
-          </button>
+  <button
+   type="button"
+  className={`nav-item ${
+    activePage === "recordings" ? "active" : ""
+  }`}
+  onClick={() => setActivePage("recordings")}
+>
+  ▷ Recordings
+</button>
 
-          <button
-            type="button"
-            className="nav-item"
-            onClick={() =>
-              window.alert("Settings will be added next.")
-            }
-          >
-            ⚙️ Settings
-          </button>
+     <button
+  type="button"
+  className={`nav-item ${
+    activePage === "settings" ? "active" : ""
+  }`}
+  onClick={() => setActivePage("settings")}
+>
+  ⚙️ Settings
+</button>     
         </nav>
 
-        <div className="sidebar-bottom">
-          <div className="help-card">
-            <div className="help-icon">✦</div>
-            <strong>Need some help?</strong>
-            <p>Explore tips to make your meetings better.</p>
-
-            <button
-              type="button"
-              onClick={() => window.alert("Guides coming soon!")}
-            >
-              Explore guides ↗️
-            </button>
-          </div>
-
-          <div className="profile">
-            <div className="avatar">
-              {(user.name || user.fullName || "U")
-                .charAt(0)
-                .toUpperCase()}
-            </div>
-
-            <div>
-              <strong>{user.name || user.fullName || "User"}</strong>
-              <small>My workspace</small>
-            </div>
-          </div>
-        </div>
+        <SidebarBottom
+  user={user}
+  showProfile={showProfile}
+  setShowProfile={setShowProfile}
+/>
+        
       </aside>
 
       {/* Main page header */}
@@ -287,26 +272,25 @@ function AppDashboard() {
               ? "My Meetings"
               : activePage === "summary"
               ? "AI Summaries"
+              : activePage === "recordings"
+              ? "Recordings"
+              : activePage === "settings"
+              ? "Settings"
               : "Dashboard"}
           </div>
 
           <div className="topbar-actions">
+           <Notification />
+
             <button
               type="button"
-              className="notification"
-              aria-label="Notifications"
-              onClick={() =>
-                window.alert("No new notifications.")
-              }
-            >
-              ♧
+              className="top-avatar"
+              onClick={() => setShowProfile(true)}
+              >
+             {(user.name || user.fullName || "U")
+             .charAt(0)
+             .toUpperCase()}
             </button>
-
-            <div className="top-avatar">
-              {(user.name || user.fullName || "U")
-                .charAt(0)
-                .toUpperCase()}
-            </div>
 
             <button
               type="button"
@@ -330,8 +314,10 @@ function AppDashboard() {
             onDeleteMeeting={handleDeleteMeeting}
             onOpenCalendar={() => setActivePage("calendar")}
             onJoinMeeting={handleJoinMeeting}
+            onOpenSummary={() => setActivePage("summary")}
           />
         )}
+
 
         {/* My Meetings */}
         {activePage === "meetings" && (
@@ -363,6 +349,16 @@ function AppDashboard() {
             <Summary />
           </main>
         )}
+
+        {/* Recordings */}
+       {activePage === "recordings" && (
+      <Recordings />
+      )}
+
+      {/* Settings */}
+     {activePage === "settings" && (
+    <Settings />
+     )}
 
       </div>
 

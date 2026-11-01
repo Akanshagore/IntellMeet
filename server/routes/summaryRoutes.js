@@ -22,8 +22,10 @@ const upload = multer({
   limits: {
     fileSize: 25 * 1024 * 1024, // 25 MB
   },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = [
+  
+
+fileFilter: (req, file, cb) => {
+  const allowedTypes = [
     "audio/webm",
     "video/webm",
     "audio/mp4",
@@ -33,19 +35,28 @@ const upload = multer({
     "audio/x-wav",
     "audio/ogg",
     "video/ogg",
-    ];
+  ];
 
-    const mimeType = file.mimetype
-    .toLowerCase()
-    .split(";")[0]
-    .trim();
+console.log("Original MIME received:", file.mimetype);
+console.log("Original filename:", file.originalname);
 
-    if (allowedTypes.includes(file.mimetype)) {
-      return cb(null, true);
-    }
 
-     return cb(new Error("Unsupported recording format."));
-  },
+const mimeType = (file.mimetype || "")
+.toLowerCase()
+.split(";")[0]
+.trim();
+
+console.log("Normalized MIME:", mimeType);
+
+if (allowedTypes.includes(mimeType)) {
+return cb(null, true);
+}
+
+console.log("Rejected recording MIME type:", file.mimetype);
+return cb(new Error("Unsupported recording format."));
+},
+
+
 });
 
 router.post(

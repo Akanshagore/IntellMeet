@@ -2,6 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import MessagePanel from "../../MessagePanel";
 import "./MeetingRoom.css";
+import {
+  uploadRecording,
+  transcribeRecording,
+  generateSummary,
+} from "../utils/recordingService";
 
 const SOCKET_URL =
   import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
@@ -73,7 +78,7 @@ export default function MeetingRoom({
   const [aiSummary, setAiSummary] = useState("");
   const [transcript, setTranscript] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-
+ 
   const localVideoRef = useRef(null);
   const socketRef = useRef(null);
   const streamRef = useRef(null);
@@ -81,6 +86,8 @@ export default function MeetingRoom({
   const mediaRecorderRef = useRef(null);
   const recordingChunksRef = useRef([]);
   const recordingUrlRef = useRef("");
+  const recordingStreamRef = useRef(null);
+  const recordingAudioContextRef = useRef(null);
 
   // Each participant has a separate WebRTC connection.
   const peersRef = useRef(new Map());
@@ -601,54 +608,55 @@ export default function MeetingRoom({
     }
   };
 
-  const leaveCall = useCallback(() => {
-    leavingRef.current = true;
+ 
+const leaveCall = useCallback(() => {
+  leavingRef.current = true;
 
-    const socket = socketRef.current;
+  // Recording चालू असल्यास आधी stop करा.
+  const recorder = mediaRecorderRef.current;
 
-    if (socket?.connected && meetingIdRef.current) {
-      socket.emit("leave-meeting", {
-        meetingId: meetingIdRef.current,
-      });
-    }
+  if (recorder && recorder.state !== "inactive") {
+    recorder.stop();
+  }
 
-    socket?.disconnect();
-    socketRef.current = null;
+  const socket = socketRef.current;
 
-    screenStreamRef.current?.getTracks().forEach((track) => {
-      track.stop();
+  if (socket?.connected && meetingIdRef.current) {
+    socket.emit("leave-meeting", {
+      meetingId: meetingIdRef.current,
     });
-    screenStreamRef.current = null;
+  }
 
-    peersRef.current.forEach((peer) => {
-      peer.ontrack = null;
-      peer.onicecandidate = null;
-      peer.onconnectionstatechange = null;
-      peer.close();
-    });
+  socket?.disconnect();
+  socketRef.current = null;
 
-    peersRef.current.clear();
-    pendingCandidatesRef.current.clear();
+  screenStreamRef.current?.getTracks().forEach((track) => track.stop());
+  screenStreamRef.current = null;
 
-    streamRef.current?.getTracks().forEach((track) => {
-      track.stop();
-    });
-    streamRef.current = null;
+  peersRef.current.forEach((peer) => peer.close());
+  peersRef.current.clear();
+  pendingCandidatesRef.current.clear();
 
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = null;
-    }
+  streamRef.current?.getTracks().forEach((track) => track.stop());
+  streamRef.current = null;
 
-    setLocalStream(null);
-    setParticipants([]);
-    setIsSharing(false);
-    setMicOn(true);
-    setCameraOn(true);
-    setCallStatus("Ready to join");
-    setError("");
+  if (localVideoRef.current) {
+    localVideoRef.current.srcObject = null;
+  }
 
-    joiningRef.current = false;
-  }, []);
+  setLocalStream(null);
+  setParticipants([]);
+  setIsSharing(false);
+  setMicOn(true);
+  setCameraOn(true);
+  setCallStatus("Ready to join");
+  setError("");
+
+  joiningRef.current = false;
+}, []);
+
+
+      
 
   useEffect(() => {
     return () => {
@@ -686,10 +694,60 @@ export default function MeetingRoom({
     setCameraOn(track.enabled);
   };
 
-  const startRecording = () => {
-  const stream = streamRef.current;
+  const createRecordingCanvas = () => {
+  const canvas = document.createElement("canvas");
 
-  if (!stream || !socketRef.current) {
+  canvas.width = 1280;
+  canvas.height = 720;
+
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Could not create recording canvas.");
+  }
+
+  const drawFrame = () => {
+    const videos = [
+      localVideoRef.current,
+      ...Array.from(
+        document.querySelectorAll(".video-tile video")
+      ).filter((video) => video !== localVideoRef.current),
+    ].filter((video) => video && video.readyState >= 2);
+
+    context.fillStyle = "#111827";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    const columns = videos.length <= 1 ? 1 : 2;
+    const rows = Math.ceil(videos.length / columns);
+
+    const tileWidth = canvas.width / columns;
+    const tileHeight = canvas.height / rows;
+
+    videos.forEach((video, index) => {
+      const x = (index % columns) * tileWidth;
+      const y = Math.floor(index / columns) * tileHeight;
+
+      context.drawImage(
+        video,
+        x,
+        y,
+        tileWidth,
+        tileHeight
+      );
+    });
+  };
+
+  const canvasStream = canvas.captureStream(30);
+
+  return {
+    canvas,
+    canvasStream,
+    drawFrame,
+  };
+};
+
+  const startRecording = () => {
+  if (!streamRef.current || !socketRef.current) {
     setError("Join the meeting before recording.");
     return;
   }
@@ -699,58 +757,125 @@ export default function MeetingRoom({
     return;
   }
 
-  if (!stream.getAudioTracks().length) {
-    setError("Microphone audio is not available.");
-    return;
-  }
+  let audioContext;
 
   try {
+    const { canvasStream, drawFrame } =
+      createRecordingCanvas();
+
+    // Draw all participant videos continuously
+    const drawInterval = setInterval(drawFrame, 33);
+
+    // Mix local and remote audio
+    audioContext = new AudioContext();
+
+    const destination =
+      audioContext.createMediaStreamDestination();
+
+    const streams = [
+      streamRef.current,
+      ...participants.map((person) => person.stream),
+    ].filter(Boolean);
+
+    streams.forEach((stream) => {
+      if (stream.getAudioTracks().length > 0) {
+        const audioStream = new MediaStream(
+          stream.getAudioTracks()
+        );
+
+        const source =
+          audioContext.createMediaStreamSource(audioStream);
+
+        source.connect(destination);
+      }
+    });
+
+    const recordingStream = new MediaStream([
+      ...canvasStream.getVideoTracks(),
+      ...destination.stream.getAudioTracks(),
+    ]);
+
     const mimeType = [
       "video/webm;codecs=vp8,opus",
       "video/webm",
     ].find((type) => MediaRecorder.isTypeSupported(type));
 
     const recorder = new MediaRecorder(
-      stream,
+      recordingStream,
       mimeType ? { mimeType } : undefined
     );
+
+    console.log("Recorder MIME:", recorder.mimeType);
 
     recordingChunksRef.current = [];
 
     recorder.ondataavailable = (event) => {
-      if (event.data && event.data.size > 0) {
+      if (event.data?.size > 0) {
         recordingChunksRef.current.push(event.data);
       }
     };
 
     recorder.onerror = (event) => {
       console.error("Recording error:", event.error);
+      clearInterval(drawInterval);
       setError("Recording failed.");
       setIsRecording(false);
     };
 
-    recorder.onstop = () => {
-      const blob = new Blob(recordingChunksRef.current, {
-        type: recorder.mimeType || "video/webm",
-      });
+   recorder.onstop = async () => {
+  clearInterval(drawInterval);
 
-      recordingChunksRef.current = [];
+  const blob = new Blob(recordingChunksRef.current, {
+    type: recorder.mimeType || "video/webm",
+  });
+  console.log("Final Blob MIME:", blob.type);
+  console.log("Final Blob Size:", blob.size);
 
-      if (!blob.size) {
-        setError("Recording is empty.");
-        return;
-      }
+  recordingChunksRef.current = [];
 
-      const url = URL.createObjectURL(blob);
+  canvasStream.getTracks().forEach((track) => track.stop());
+  recordingStream.getTracks().forEach((track) => track.stop());
 
-      if (recordingUrlRef.current) {
-        URL.revokeObjectURL(recordingUrlRef.current);
-      }
+  if (audioContext.state !== "closed") {
+    await audioContext.close();
+  }
 
-      recordingUrlRef.current = url;
-      setRecordingUrl(url);
-      setCallStatus("Recording saved. Ready for AI summary.");
-    };
+  recordingAudioContextRef.current = null;
+  recordingStreamRef.current = null;
+
+  setIsRecording(false);
+
+  if (!blob.size) {
+    setError("Recording is empty.");
+    return;
+  }
+
+  const url = URL.createObjectURL(blob);
+
+  if (recordingUrlRef.current) {
+    URL.revokeObjectURL(recordingUrlRef.current);
+  }
+
+  recordingUrlRef.current = url;
+  setRecordingUrl(url);
+
+  try {
+    setCallStatus("Uploading recording to IntellMeet...");
+
+    const result = await uploadRecording(
+      blob,
+      meetingIdRef.current
+    );
+
+    console.log("Recording uploaded:", result);
+
+    setCallStatus("Recording saved in IntellMeet!");
+
+  } catch (err) {
+    console.error("Recording upload error:", err);
+    setError(err.message || "Recording upload failed.");
+  }
+};
 
     mediaRecorderRef.current = recorder;
     recorder.start(1000);
@@ -760,7 +885,12 @@ export default function MeetingRoom({
     setCallStatus("Recording meeting...");
   } catch (err) {
     console.error("Start recording error:", err);
-    setError("Could not start recording.");
+
+    if (audioContext && audioContext.state !== "closed") {
+      audioContext.close();
+    }
+
+    setError(err.message || "Could not start recording.");
   }
 };
 
@@ -772,8 +902,14 @@ const stopRecording = () => {
     return;
   }
 
-  recorder.stop();
-  setIsRecording(false);
+  try {
+    recorder.stop();
+    setIsRecording(false);
+    setCallStatus("Preparing your recording...");
+  } catch (err) {
+    console.error("Stop recording error:", err);
+    setError("Could not stop recording.");
+  }
 };
   
 const generateRecordingSummary = async () => {
