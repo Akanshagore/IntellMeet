@@ -117,7 +117,7 @@ IntellMeet/
 ├── .gitignore
 └── README.md
 
-*Note: The directory structure above is illustrative. Adjust it to match your actual project folders and files.*
+
 
 ## ⚙️ Installation and Setup
 
