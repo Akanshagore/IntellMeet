@@ -52,36 +52,70 @@ The platform aims to enhance productivity by bringing meeting management and col
 
 ## 🏗️ Project Architecture
 
-```text
 IntellMeet/
 │
 ├── client/
 │   ├── public/
-│   └── src/
-│       ├── assets/
-│       │   └── pages/
-│       ├── components/
-│       ├── App.jsx
-│       └── main.jsx
+│   │
+│   ├── src/
+│   │   ├── assets/
+│   │   │   ├── pages/
+│   │   │   │   ├── MeetingRoom.jsx
+│   │   │   │   └── Summary.jsx
+│   │   │   │
+│   │   │   └── utils/
+│   │   │       └── recordingService.js
+│   │   │
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   ├── Auth.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── Calendar.jsx
+│   │   ├── CreateMeeting.jsx
+│   │   ├── EditMeeting.jsx
+│   │   ├── Meetings.jsx
+│   │   ├── SharedMeeting.jsx
+│   │   ├── Recordings.jsx
+│   │   ├── Notification.jsx
+│   │   ├── Notification.css
+│   │   ├── Settings.jsx
+│   │   ├── SidebarBottom.jsx
+│   │   ├── main.jsx
+│   │   └── index.css
+│   │
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
 │
 ├── server/
+│   ├── middleware/
+│   │   └── authMiddleware.js
+│   │
 │   ├── models/
 │   │   ├── User.js
 │   │   ├── Meeting.js
-│   │   └── Message.js
+│   │   ├── Message.js
+│   │   └── Recording.js
+│   │
 │   ├── routes/
 │   │   ├── authRoutes.js
 │   │   ├── meetingRoutes.js
-│   │   └── messageRoutes.js
-│   ├── middleware/
-│   │   └── authMiddleware.js
+│   │   ├── messageRoutes.js
+│   │   ├── recordingRoutes.js
+│   │   └── summaryRoutes.js
+│   │
 │   ├── socket/
 │   │   └── meetingSocket.js
+│   │
+│   ├── uploads/
+│   │   └── recordings/
+│   │
+│   ├── .env
+│   ├── package.json
 │   └── server.js
 │
 ├── .gitignore
 └── README.md
-```
 
 *Note: The directory structure above is illustrative. Adjust it to match your actual project folders and files.*
 
@@ -207,3 +241,28 @@ This project is developed for educational and learning purposes. A formal open-s
 ---
 
 ⭐ If you find this project interesting, consider giving the repository a star!
+
+## images
+
+1. Dashboard Screenshot
+   <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/155e40ff-e068-4e49-9e86-d4cdc8a1e181" />
+
+2. Meeting Room Screenshot
+   <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7026f88d-b1d8-44d1-b732-9dfbca3841eb" />
+
+3. Calendar Screenshot
+   <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/3f2a97b2-7375-4518-a3a6-39dc572dc913" />
+
+4. AI Summary Screenshot
+   <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/079126a5-76c3-4c5e-8f12-c5a06f4b80d2" />
+5. user  Screenshot
+   <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/c2103660-a0ef-452a-9359-b7a88b9faf8e" />
+6. signup Screenshot
+   <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/af5193c5-ebe7-4393-8424-55e3b1dc6595" />
+   
+
+   
+
+
+
+
