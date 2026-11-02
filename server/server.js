@@ -66,7 +66,7 @@ app.use("/api/recordings", recordingRoutes);
 registerMeetingSocket(io);
 
 // Health check
-app.get("/", ( res) => {
+app.get("/", (req, res) => {
   res.send("Welcome to IntellMeet Backend!");
 });
 
