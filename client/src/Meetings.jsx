@@ -3,7 +3,7 @@ import "./Meeting.css";
 import CreateMeeting from "./CreateMeeting";
 import JoinMeetingButton from "./JoinMeetingButton";
 
-const API_URL = "http://localhost:5000/api/meetings";
+const API_URL = `${import.meta.env.VITE_API_URL}/meetings`;
 
 function Meetings() {
   const [meetings, setMeetings] = useState([]);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./Meeting.css";
 
-const API_URL = "http://localhost:5000/api/meetings";
+const API_URL = `${import.meta.env.VITE_API_URL}/meetings`;
 
 function getLoggedInUser() {
   try {

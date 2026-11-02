@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
-const API_URL = "http://localhost:5000/api";
-const SERVER_URL = "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
+const SERVER_URL = import.meta.env.VITE_SOCKET_URL;
 
 function Recordings() {
   const [recordings, setRecordings] = useState([]);

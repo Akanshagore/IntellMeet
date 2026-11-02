@@ -17,7 +17,7 @@ import SidebarBottom from "./SidebarBottom";
 import Notification from "./Notification";
 
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 function AppDashboard() {
   const [user, setUser] = useState(() => {

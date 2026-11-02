@@ -39,7 +39,7 @@ function Auth({ onLogin }) {
         : { email: email.trim(), password };
 
       const response = await fetch(
-        `http://localhost:5000/api/auth/${endpoint}`,
+      `${import.meta.env.VITE_API_URL}/auth/${endpoint}`,
         {
           method: "POST",
           headers: {
