@@ -40,6 +40,7 @@ function Auth({ onLogin }) {
 
       const response = await fetch(
       `${import.meta.env.VITE_API_URL}/auth/${endpoint}`,
+      //`http://localhost:5000/api/auth/${endpoint}`,
         {
           method: "POST",
           headers: {
@@ -51,10 +52,10 @@ function Auth({ onLogin }) {
 
       const data = await response.json();
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Authentication failed");
+       if (!response.ok || !data.success) {
+       throw new Error(data.message || "Authentication failed");
       }
-
+     
       if (isRegister) {
         setIsRegister(false);
         setPassword("");

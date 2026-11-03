@@ -46,6 +46,7 @@ function AppDashboard() {
   const [showProfile, setShowProfile] = useState(false);
 
   const [activePage, setActivePage] = useState("dashboard");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Load meetings from backend
   const loadMeetings = useCallback(async () => {
@@ -167,8 +168,8 @@ function AppDashboard() {
   return (
     <div className="app-layout">
       {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="brand">
+      <aside className={`sidebar ${mobileMenuOpen ? "mobile-open" : ""}`}>
+          <div className="brand">
           <span className="brand-icon">✳️</span>
           <span>IntellMeet</span>
         </div>
@@ -262,6 +263,13 @@ function AppDashboard() {
       {/* Main page header */}
       <div className="app-page">
         <header className="topbar">
+          <button
+         type="button"
+        className="mobile-menu-btn"
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+        ☰
+       </button>
           <div className="breadcrumb">
             Workspace /{" "}
             {activePage === "messages"

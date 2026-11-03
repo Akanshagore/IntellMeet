@@ -1411,3 +1411,68 @@ html[data-theme="dark"] .settings-select {
 .profile-arrow {
   flex-shrink: 0;
 }
+.profile-modal-overlay {
+  position: fixed !important;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.profile-modal {
+  position: relative;
+  width: 90%;
+  max-width: 430px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.mobile-menu-btn {
+  display: none;
+  background: #6658e8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 270px;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .app-page {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
