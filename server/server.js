@@ -1,4 +1,3 @@
-
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -23,6 +22,7 @@ const server = http.createServer(app);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
+   "https://intellmeet-1-zpyw.onrender.com",
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
@@ -99,3 +99,4 @@ async function startServer() {
 }
 
 startServer();
+
