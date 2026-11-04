@@ -609,103 +609,6 @@ h1 span {
   }
 }
 
-@media (max-width: 650px) {
-  .sidebar {
-    position: static;
-    width: 100%;
-    padding: 16px;
-  }
-
-  .brand {
-    padding: 0 4px 15px;
-  }
-
-  .menu-label,
-  .sidebar-bottom,
-  .tools-label {
-    display: none;
-  }
-
-  .nav-menu {
-    display: flex;
-    overflow-x: auto;
-    gap: 5px;
-  }
-
-  .nav-item {
-    flex-shrink: 0;
-    padding: 10px;
-    font-size: 11px;
-  }
-
-  .nav-menu + .nav-menu {
-    margin-top: 6px;
-  }
-
-  .main-content {
-    margin-left: 0;
-    padding: 0 14px;
-  }
-
-  .topbar {
-    height: 56px;
-  }
-
-  .welcome-row {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 24px 0 20px;
-  }
-
-  .welcome-row .primary-button {
-    width: 100%;
-  }
-
-  .stats-grid {
-    gap: 10px;
-  }
-
-  .stat-card {
-    padding: 12px;
-  }
-
-  .stat-top {
-    font-size: 10px;
-  }
-
-  .stat-card h2 {
-    font-size: 24px;
-  }
-
-  .content-grid {
-    margin-top: 15px;
-    gap: 15px;
-  }
-
-  .panel {
-    padding: 14px;
-  }
-
-  .meeting-card {
-    flex-wrap: wrap;
-  }
-
-  .meeting-info {
-    flex-basis: calc(100% - 55px);
-  }
-
-  .join-button {
-    margin-left: 51px;
-  }
-
-  .right-column {
-    grid-template-columns: 1fr;
-  }
-
-  .page-footer {
-    flex-direction: column;
-  }
-} 
 
   
  
@@ -1444,21 +1347,221 @@ html[data-theme="dark"] .settings-select {
   cursor: pointer;
 }
 
-@media (max-width: 768px) {
-  .mobile-menu-btn {
-    display: block;
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+  display: none;
+  background: #6658e8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Desktop Layout */
+@media (min-width: 769px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
   }
 
+  .dashboard-grid,
+  .content-grid {
+    grid-template-columns: 1.4fr 1fr !important;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .app-layout {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Sidebar */
   .sidebar {
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
     width: 270px;
+    min-width: 270px;
+    height: 100vh;
+    box-sizing: border-box;
     z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
-    overflow-y: auto;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .nav-menu {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .nav-item {
+    width: 100%;
+    min-height: 45px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .help-card {
+    display: none;
+  }
+
+  .sidebar-bottom {
+    margin-top: auto;
+  }
+
+  /* Main Page */
+  .app-page {
+    width: 100%;
+    min-width: 0;
+    min-height: 100vh;
+    margin: 0;
+    flex: 1;
+  }
+
+  .main-content {
+    width: 100%;
+    min-width: 0;
+    padding: 15px;
+    box-sizing: border-box;
+  }
+
+  /* Topbar */
+  .mobile-menu-btn {
+    display: block;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+    height: auto;
+    min-height: 65px;
+  }
+
+  /* Dashboard Cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px;
+  }
+
+  .dashboard-grid,
+  .content-grid,
+  .right-column {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 15px;
+  }
+
+  .dashboard-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .welcome-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .welcome-row .primary-button {
+    width: 100%;
+  }
+
+  .meeting-card {
+    flex-wrap: wrap;
+  }
+
+  .meeting-info {
+    min-width: 0;
+  }
+
+  .page-footer {
+    flex-wrap: wrap;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 400px) {
+  .sidebar {
+    width: 260px;
+    min-width: 260px;
+  }
+
+  .main-content {
+    padding: 12px;
+  }
+
+  .panel,
+  .stat-card {
+    padding: 14px;
+  }
+}
+
+/* =================================
+   RESPONSIVE APP LAYOUT FIX
+================================= */
+
+/* Desktop */
+@media (min-width: 1101px) {
+  .app-page {
+    margin-left: 245px;
+    width: calc(100% - 245px);
+    min-width: 0;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .app-page {
+    margin-left: 215px;
+    width: calc(100% - 215px);
+    min-width: 0;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    min-width: 0;
+    padding: 0 20px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .app-layout {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .sidebar {
+    left: 0;
+    transform: translateX(-100%);
   }
 
   .sidebar.mobile-open {
@@ -1467,12 +1570,28 @@ html[data-theme="dark"] .settings-select {
 
   .app-page {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     margin-left: 0;
   }
 
+  .main-content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    padding: 15px;
+  }
+
   .topbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 400px) {
+  .main-content {
+    padding: 12px;
   }
 }

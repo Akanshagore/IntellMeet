@@ -145,14 +145,27 @@ if (!inviteResponse.ok || !inviteData.success) {
   );
 }
 
-console.log("Invitation Link:", inviteData.inviteLink); 
-      if (typeof onCreated === "function") {
-        onCreated(data.meeting);
-      }
+ console.log("Invitation Link:", inviteData.inviteLink);
 
-      if (typeof onClose === "function") {
-        onClose();
-      }
+const inviteToken =
+  inviteData.inviteToken ||
+  inviteData.token ||
+  inviteData.inviteLink?.split("/").filter(Boolean).pop() ||
+  "";
+
+const meetingWithInvite = {
+  ...data.meeting,
+  meetingLink: inviteData.inviteLink || "",
+  inviteToken,
+};
+
+if (typeof onCreated === "function") {
+  onCreated(meetingWithInvite);
+}
+
+if (typeof onClose === "function") {
+  onClose();
+}
     } catch (err) {
       setError(
         err.message === "Failed to fetch"

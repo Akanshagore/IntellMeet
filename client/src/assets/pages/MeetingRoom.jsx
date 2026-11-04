@@ -113,6 +113,48 @@ export default function MeetingRoom({
     (meeting) => meeting._id === meetingId
   );
 
+   const inviteLink =
+  selectedMeeting?.meetingLink ||
+  (selectedMeeting?.inviteToken
+    ? `${window.location.origin}/meeting/${selectedMeeting.inviteToken}`
+    : window.location.pathname.startsWith("/meeting/")
+      ? `${window.location.origin}${window.location.pathname}`
+      : "");
+
+const copyInviteLink = async () => {
+  if (!inviteLink) {
+    setError("Invite link not found. Please check the meeting invite token.");
+    return;
+  }
+
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(inviteLink);
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = inviteLink;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.select();
+
+      const copied = document.execCommand("copy");
+      document.body.removeChild(textArea);
+
+      if (!copied) {
+        throw new Error("Copy failed");
+      }
+    }
+
+    setCallStatus("Meeting link copied!");
+    setError("");
+  } catch (err) {
+    console.error("Copy link error:", err);
+    setError("Could not copy the meeting link.");
+  }
+};
+  
+
   useEffect(() => {
     if (!localVideoRef.current) return;
 
@@ -1071,6 +1113,7 @@ const generateRecordingSummary = async () => {
               </select>
             )}
           </div>
+          
 
           <div className="video-grid">
             <div
@@ -1124,17 +1167,30 @@ const generateRecordingSummary = async () => {
             </div>
 
             <div className="meeting-controls">
-              {!localStream ? (
-                <button
-                  type="button"
-                  className="control-button join-button"
-                  onClick={joinCall}
-                  disabled={!meetingId || joiningRef.current}
-                >
-                  <span>▶️</span>
-                  <small>Join</small>
-                </button>
-              ) : (
+              
+                {!localStream ? (
+             <>
+            <button
+           type="button"
+           className="control-button join-button"
+           onClick={joinCall}
+           disabled={!meetingId || joiningRef.current}
+           >
+           <span>▶️</span>
+           <small>Join</small>
+            </button>
+
+    <button
+      type="button"
+      className="control-button copy-link-control"
+      onClick={copyInviteLink}
+      disabled={!inviteLink}
+    >
+      <span>📋</span>
+      <small>Copy Link</small>
+    </button>
+  </>
+) : (
                 <>
                   <button
                     type="button"

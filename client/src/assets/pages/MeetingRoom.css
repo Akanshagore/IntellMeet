@@ -306,6 +306,22 @@
   background: #786cf0;
 }
 
+/* Copy Link Button */
+.copy-link-control {
+  background: #6658e8;
+  border-color: #6658e8;
+  color: white;
+}
+
+.copy-link-control:hover {
+  background: #786cf0;
+}
+
+.copy-link-control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .leave-button {
   background: #e5484d;
   border-color: #e5484d;

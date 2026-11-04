@@ -182,7 +182,10 @@ function AppDashboard() {
             className={`nav-item ${
               activePage === "dashboard" ? "active" : ""
             }`}
-            onClick={() => setActivePage("dashboard")}
+            onClick={() => {
+            setActivePage("dashboard");
+            setMobileMenuOpen(false);
+            }}
           >
             ▦ Dashboard
           </button>
@@ -192,7 +195,10 @@ function AppDashboard() {
             className={`nav-item ${
               activePage === "meetings" ? "active" : ""
             }`}
-            onClick={() => setActivePage("meetings")}
+            onClick={() => {
+            setActivePage("meetings");
+            setMobileMenuOpen(false);
+           }}
           >
             ▣ My Meetings
           </button>
@@ -202,7 +208,10 @@ function AppDashboard() {
             className={`nav-item ${
               activePage === "calendar" ? "active" : ""
             }`}
-            onClick={() => setActivePage("calendar")}
+           onClick={() => {
+          setActivePage("calendar");
+          setMobileMenuOpen(false);
+          }}
           >
             ▦ Calendar
           </button>
@@ -212,7 +221,10 @@ function AppDashboard() {
             className={`nav-item ${
               activePage === "messages" ? "active" : ""
             }`}
-            onClick={() => setActivePage("messages")}
+            onClick={() => {
+            setActivePage("messages");
+            setMobileMenuOpen(false);
+            }}
           >
             ▤ Messages
           </button>
@@ -222,11 +234,14 @@ function AppDashboard() {
 
         <nav className="nav-menu">
          <button
-  type="button"
-  className={`nav-item ${
+     type="button"
+     className={`nav-item ${
     activePage === "summary" ? "active" : ""
   }`}
-  onClick={() => setActivePage("summary")}
+       onClick={() => {
+         setActivePage("summary");
+          setMobileMenuOpen(false);
+       }}
 >
   ✧ AI Summaries
 </button>
@@ -236,7 +251,10 @@ function AppDashboard() {
   className={`nav-item ${
     activePage === "recordings" ? "active" : ""
   }`}
-  onClick={() => setActivePage("recordings")}
+     onClick={() => {
+     setActivePage("recordings");
+     setMobileMenuOpen(false);
+   }} 
 >
   ▷ Recordings
 </button>
@@ -246,7 +264,10 @@ function AppDashboard() {
   className={`nav-item ${
     activePage === "settings" ? "active" : ""
   }`}
-  onClick={() => setActivePage("settings")}
+    onClick={() => {
+    setActivePage("settings");
+     setMobileMenuOpen(false);
+  }}
 >
   ⚙️ Settings
 </button>     
