@@ -302,20 +302,25 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const meeting = await Meeting.create({
-      title: title.trim(),
-      description: description.trim(),
-      scheduledAt: startDate,
-      endAt: endDate,
-      participants: [
-        ...new Set(
-          participants.map((email) =>
-            email.trim().toLowerCase()
-          )
-        ),
-      ],
-      createdBy: req.user._id,
-    });
+  const meeting = await Meeting.create({
+  title: title.trim(),
+  description: description.trim(),
+  scheduledAt: startDate,
+  endAt: endDate,
+
+  participants: [
+    ...new Set(
+      participants.map((email) =>
+        email.trim().toLowerCase()
+      )
+    ),
+  ],
+
+  inviteToken: crypto.randomBytes(32).toString("hex"),
+  allowGuestJoin: true,
+
+  createdBy: req.user._id,
+});
 
     return res.status(201).json({
       success: true,
